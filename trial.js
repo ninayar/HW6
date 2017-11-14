@@ -65,60 +65,73 @@ var ylist=[
 ];
 
 function addListeners(){
- $('#update').on('click',function(){
+
     // Define the axes
     var xvalue=d3.select("#sel-x").node().value;
-    console.log(xvalue);
     var yvalue=d3.select("#sel-y").node().value;
-    console.log(yvalue);
+    //create an svg
     var svg= d3.select("svg")
-    .attr("width", width+10)
-    .attr("height", height+50)
-    .append("g")
-    .attr("transform",
+      .attr("width", width+10)
+      .attr("height", height+50)
+      .append("g")
+      .attr("transform",
           "translate(" + margin.left + "," + margin.top + ")");
     // set the ranges
     var x = d3.scaleLinear().range([0,width]);
     var y = d3.scaleLinear().range([height,0]);
 
-    var valueline = d3.line()
-        .x(function(d) { return x(d.xvalue); })
-        .y(function(d) { return y(d.yvalue); });
-
+//mpg values
+    var min=$('#mpg-min').val();
+    var max=$('#mpg-max').val();
+    console.log(max);
 
 //load values
 d3.csv('car.csv',function(data) {
+  d3.selectAll("circle").data(data).exit().remove();
+  d3.selectAll(".axisLabel").remove();
   data.forEach(function(d) {
+    d["mpg"]=+d["mpg"];
+    d["name"]=d["name"];
     d[xvalue] = +d[xvalue];
     d[yvalue] = +d[yvalue];
   });
-  console.log(data[0]);
-
   // Scale the range of the data
   x.domain(d3.extent(data, function(d) { return d[xvalue]; }));
   y.domain(d3.extent(data, function(d) { return d[yvalue]; }));
 
-  svg.selectAll("dot")
-          .data(data)
+//scatterplot
+  svg.append("g")
+        .attr("id", "scatter-1")
+        .selectAll("dot")
+        .data(data)
         .enter().append("circle")
-          .attr("r", 3.5)
-          .attr("cx",function(d) { return x(d[xvalue]); })
-          .attr("cy",function(d) { return y(d[yvalue]); })
-          // .style("fill",function(d){return d?colour(d[1]):"black";});
-            // Add the X Axis
-          svg.append("g")
-          .attr("transform", "translate(" + 0 + " ," +
-                 (height) + ")")
+        .filter(function(d) { return (d.mpg > min && d.mpg < max) })
+          .style("fill", "red")
+        .attr("r", 3.5)
+        .attr("class", 'markers')
+        .attr("cx",function(d) { return x(d[xvalue]); })
+        .attr("cy",function(d) { return y(d[yvalue]); })
+        .on("mouseover", function(d) {
+            $('#hovered')
+            .val(d["name"])
+            .text(d["name"])
+        });
+  // Add the X Axis
+  svg.append("g")
+          .attr("id", "x-axis")
+          .attr("transform", "translate(" + 0 + " ," + (height) + ")")
               .call(d3.axisBottom(x))
           svg.append("text")
           .attr("transform",
             "translate(" + (width/2) + " ," +
                            (height+30) + ")")
           .style("text-anchor", "middle")
-          .text(d3.select("#sel-x").node().value);
+          .text(d3.select("#sel-x").node().value)
+          .classed("axisLabel",true);
 
-          // Add the Y Axis
-          svg.append("g")
+  // Add the Y Axis
+  svg.append("g")
+          .attr("id", "y-axis")
                 .call(d3.axisLeft(y))
           svg.append("text")
           .attr("transform", "rotate(-90)")
@@ -126,13 +139,10 @@ d3.csv('car.csv',function(data) {
           .attr("x",0 - (height / 2))
           .attr("dy", "1em")
           .style("text-anchor", "middle")
-                // .attr("transform", "rotate(-90)")
-                .text(d3.select("#sel-y").node().value);
-
+                .text(d3.select("#sel-y").node().value)
+          .classed("axisLabel",true);
 
 });
-svg.selectAll(".pin").exit().remove();
- });
 }
 
 $(document).ready(function(){
@@ -145,12 +155,15 @@ $(document).ready(function(){
     .appendTo(selx);
   }
   var sely = $("#sel-y");
-  for(var i=0;i<xlist.length;i++){
+  for(var i=0;i<ylist.length;i++){
     var yl=ylist[i];
     $('<option></option>')
     .val(yl.id)
     .text(yl.name)
     .appendTo(sely);
   }
+  $('#update').on('click',function(){
   addListeners();
+});
+
 })
