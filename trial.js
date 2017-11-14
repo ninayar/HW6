@@ -87,8 +87,11 @@ function addListeners(){
 
 //load values
 d3.csv('car.csv',function(data) {
-  d3.selectAll("circle").data(data).exit().remove();
+  d3.selectAll(".markers").remove();
   d3.selectAll(".axisLabel").remove();
+  d3.selectAll("#x-axis").remove();
+  d3.selectAll("#y-axis").remove();
+
   data.forEach(function(d) {
     d["mpg"]=+d["mpg"];
     d["name"]=d["name"];
